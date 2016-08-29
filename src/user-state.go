@@ -17,8 +17,8 @@ type userAction uint8
 
 // UserActions used for storing available action and preventing random integer insertion
 var UserActions = struct {
-	COPY, MOVE, RENAME userAction
-}{1, 2, 3}
+	NONE, COPY, MOVE, RENAME userAction
+}{0, 1, 2, 3}
 
 // UsersList global list of users with their current states
 var UsersList []UserState
@@ -48,4 +48,13 @@ func GetCurrentState(u *telebot.User) *UserState {
 	UsersList = append(UsersList, newState)
 
 	return &UsersList[len(UsersList)-1]
+}
+
+// ResetAction set current action for user to NONE
+func ResetAction(bot *telebot.Bot, msg telebot.Message) error {
+	state := GetCurrentState(&msg.Sender)
+
+	state.selectedAction = UserActions.NONE
+
+	return bot.SendMessage(msg.Chat, "Got it, aborting!", nil)
 }

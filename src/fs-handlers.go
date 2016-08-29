@@ -64,7 +64,7 @@ func ShowActions(bot *telebot.Bot, msg telebot.Message) error {
 			[]telebot.KeyboardButton{
 				telebot.KeyboardButton{
 					Text: "Delete",
-					Data: "/confirm delete " + fileInfo.Name(),
+					Data: "/rm " + fileInfo.Name(),
 				},
 			},
 			[]telebot.KeyboardButton{
@@ -137,6 +137,19 @@ func Download(bot *telebot.Bot, msg telebot.Message) error {
 		bot.SendVideo(msg.Sender, &telebot.Video{Audio: telebot.Audio{File: file}}, nil)
 	}
 	return bot.SendDocument(msg.Sender, &telebot.Document{File: file}, nil)
+}
+
+// Remove file or folder from filesystem
+func Remove(bot *telebot.Bot, msg telebot.Message) error {
+	filename := msg.Text[strings.Index(msg.Text, " ")+1:]
+	fullpath := path.Join(GetCurrentState(&msg.Sender).currentPath, filename)
+
+	err := os.RemoveAll(fullpath)
+	if err != nil {
+		return bot.SendMessage(msg.Chat, "Failed to remove "+filename, nil)
+	}
+
+	return bot.SendMessage(msg.Chat, filename+" removed successfully", nil)
 }
 
 func lsToMarkup(path string, page int) (telebot.ReplyMarkup, error) {

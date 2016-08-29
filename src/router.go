@@ -34,6 +34,9 @@ func GetRouter() *Router {
 	router.routes["/actions"] = ShowActions
 	router.routes["/cd"] = ChangeDirectory
 	router.routes["/download"] = Download
+	router.routes["/rm"] = Confirm("delete")
+	router.routes["/delete"] = Remove
+	router.routes["/cancel"] = ResetAction
 
 	return &router
 }

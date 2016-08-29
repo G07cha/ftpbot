@@ -1,12 +1,12 @@
 # FTPBot
 
-Interact with filesystem of remote computer or server from your PC or smartphone using a Telegram client.
+Interact with the filesystem of a remote computer or server from your PC or smartphone using a Telegram client.
 
 ## Getting started
 
 1. Grab the [latest release](https://github.com/G07cha/ftpbot/releases)
 2. [Create telegram bot](https://core.telegram.org/bots#3-how-do-i-create-a-bot)
-3. Copy token and run the latest binary with `--token "%YOUR_TOKEN%"` argument
+3. Copy token from BotFather and run the latest binary with `--token "%YOUR_TOKEN%"` argument
 
 You can check all available options by running `ftpbot --help`. Don't see an option that you want in the list? Submit an issue about this!
 
@@ -27,7 +27,7 @@ make
 ./bin/ftpbot --token "YOUR_TOKEN"
 ```
 
-### Using docker
+### Use Docker
 
 Insert `token` argument in Dockerfile and run next commands:
 

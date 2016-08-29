@@ -4,7 +4,7 @@ Interact with filesystem of remote computer or server from your PC or smartphone
 
 ## Getting started
 
-1. Grab the latest release
+1. Grab the [latest release](https://github.com/G07cha/ftpbot/releases)
 2. [Create telegram bot](https://core.telegram.org/bots#3-how-do-i-create-a-bot)
 3. Copy token and run the latest binary with `--token "%YOUR_TOKEN%"` argument
 

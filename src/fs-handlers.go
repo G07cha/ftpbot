@@ -105,7 +105,7 @@ func ShowActions(bot *telebot.Bot, msg telebot.Message) error {
 func ChangeDirectory(bot *telebot.Bot, msg telebot.Message) error {
 	state := GetCurrentState(&msg.Sender)
 
-	newPath := path.Join(state.currentPath, strings.Split(msg.Text, " ")[1])
+	newPath := path.Join(state.currentPath, msg.Text[strings.Index(msg.Text, " "):])
 	state.currentPath = newPath
 
 	markup, err := lsToMarkup(newPath, 0)

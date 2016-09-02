@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"regexp"
 	"strings"
 
 	"github.com/tucnak/telebot"
@@ -9,7 +10,7 @@ import (
 
 // Router used for flexible working with multiple commands and handlers
 type Router struct {
-	routes map[string]func(*telebot.Bot, telebot.Message) error
+	routes map[*regexp.Regexp]func(*telebot.Bot, telebot.Message) error
 	handle func(*telebot.Bot, telebot.Message)
 }
 
@@ -17,26 +18,39 @@ type Router struct {
 func GetRouter() *Router {
 	router := Router{
 		handle: func(bot *telebot.Bot, message telebot.Message) {
-			command := getCommand(message.Text)
-
-			if handler, ok := router.routes[command]; ok {
-				err := handler(bot, message)
-				if err != nil {
-					log.Println(message.Text + " HANDLER ERROR:")
-					log.Println(err)
+			for route, handler := range router.routes {
+				if route.MatchString(message.Text) == true {
+					err := handler(bot, message)
+					if err != nil {
+						log.Println(message.Text + " HANDLER ERROR:")
+						log.Println(err)
+					}
 				}
 			}
+
 		},
-		routes: make(map[string]func(*telebot.Bot, telebot.Message) error),
+		routes: make(map[*regexp.Regexp]func(*telebot.Bot, telebot.Message) error),
 	}
 
-	router.routes["/ls"] = LS
-	router.routes["/actions"] = ShowActions
-	router.routes["/cd"] = ChangeDirectory
-	router.routes["/download"] = Download
-	router.routes["/rm"] = Confirm("delete")
-	router.routes["/delete"] = Remove
-	router.routes["/cancel"] = ResetAction
+	routes := map[string]func(*telebot.Bot, telebot.Message) error{
+		"^/ls*":       LS,
+		"^/actions*":  ShowActions,
+		"^/cd*":       ChangeDirectory,
+		"^/download*": Download,
+		"^/rm*":       Confirm("delete"),
+		"^/delete*":   Remove,
+		"^/cancel*":   ResetAction,
+	}
+
+	for route, handler := range routes {
+		expression, err := regexp.Compile(route)
+		if err != nil {
+			log.Println(route + " is invalid regexp, skipping")
+			log.Println(err)
+		} else {
+			router.routes[expression] = handler
+		}
+	}
 
 	return &router
 }

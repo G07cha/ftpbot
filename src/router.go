@@ -42,8 +42,12 @@ func handler(bot *telebot.Bot, message telebot.Message) {
 }
 
 func getCommand(text string) string {
-	if text[0:1] == "/" {
-		return text[0:strings.Index(text, " ")]
+	if text[0] == '/' {
+		spaceSymbol := strings.Index(text, " ")
+		if spaceSymbol > -1 {
+			return text[:spaceSymbol]
+		}
+		return text
 	}
 	return ""
 }

@@ -13,10 +13,8 @@ type argT struct {
 }
 
 var bot *telebot.Bot
-var router *Router
 
 func main() {
-	router = GetRouter()
 	cli.Run(new(argT), func(ctx *cli.Context) error {
 		var err error
 		argv := ctx.Argv().(*argT)
@@ -41,7 +39,7 @@ func main() {
 
 func messages() {
 	for message := range bot.Messages {
-		router.handle(bot, message)
+		Router.handle(bot, message)
 	}
 }
 
@@ -55,6 +53,6 @@ func callbacks() {
 			CallbackID: callback.ID,
 		})
 
-		router.handle(bot, callback.Message)
+		Router.handle(bot, callback.Message)
 	}
 }

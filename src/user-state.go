@@ -23,6 +23,10 @@ var UserActions = struct {
 // UsersList global list of users with their current states
 var UsersList []UserState
 
+func init() {
+	Router.routes["/cancel"] = ResetAction
+}
+
 // NewUser create new user with default parameters
 func NewUser(u *telebot.User) UserState {
 	usr, err := user.Current() // Home directory

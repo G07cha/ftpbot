@@ -7,40 +7,43 @@ import (
 	"github.com/tucnak/telebot"
 )
 
-// Router used for flexible working with multiple commands and handlers
-type Router struct {
+type router struct {
 	routes map[string]func(*telebot.Bot, telebot.Message) error
 	handle func(*telebot.Bot, telebot.Message)
 }
 
-// GetRouter initializes application's router
-func GetRouter() *Router {
-	router := Router{
-		handle: func(bot *telebot.Bot, message telebot.Message) {
-			command := getCommand(message.Text)
+// Router used for flexible working with multiple commands and handlers
+var Router = router{
+	routes: make(map[string]func(*telebot.Bot, telebot.Message) error),
+}
 
-			if handler, ok := router.routes[command]; ok {
-				err := handler(bot, message)
-				if err != nil {
-					log.Println(message.Text + " HANDLER ERROR:")
-					log.Println(err)
-				}
-			}
-		},
-		routes: make(map[string]func(*telebot.Bot, telebot.Message) error),
+func init() {
+	Router.handle = handler
+}
+
+func handler(bot *telebot.Bot, message telebot.Message) {
+	command := getCommand(message.Text)
+
+	if message.Document.FileName != "" && Router.routes["file"] != nil {
+		Router.routes["file"](bot, message)
 	}
 
-	router.routes["/ls"] = LS
-	router.routes["/actions"] = ShowActions
-	router.routes["/cd"] = ChangeDirectory
-	router.routes["/download"] = Download
-	router.routes["/rm"] = Confirm("delete")
-	router.routes["/delete"] = Remove
-	router.routes["/cancel"] = ResetAction
+	if length := len(command); length > 0 && Router.routes["text"] != nil {
+		Router.routes["text"](bot, message)
+	}
 
-	return &router
+	if handler, ok := Router.routes[command]; ok {
+		err := handler(bot, message)
+		if err != nil {
+			log.Println(message.Text + " HANDLER ERROR:")
+			log.Println(err)
+		}
+	}
 }
 
 func getCommand(text string) string {
-	return strings.Split(text, " ")[0]
+	if text[0:1] == "/" {
+		return text[0:strings.Index(text, " ")]
+	}
+	return ""
 }

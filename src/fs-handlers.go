@@ -10,8 +10,16 @@ import (
 	"github.com/tucnak/telebot"
 )
 
-// LS provide interface between telebot and native function to list files in current directory
-func LS(bot *telebot.Bot, msg telebot.Message) error {
+func init() {
+	Router.routes["/ls"] = ls
+	Router.routes["/actions"] = showActions
+	Router.routes["/cd"] = cd
+	Router.routes["/download"] = download
+	Router.routes["/rm"] = Confirm("delete")
+	Router.routes["/delete"] = rm
+}
+
+func ls(bot *telebot.Bot, msg telebot.Message) error {
 	page := 0
 	path := GetCurrentState(&msg.Sender).currentPath
 	args := strings.Split(msg.Text, " ")
@@ -29,8 +37,7 @@ func LS(bot *telebot.Bot, msg telebot.Message) error {
 	})
 }
 
-// ShowActions determinates and show possible actions that could be done with file from passed query
-func ShowActions(bot *telebot.Bot, msg telebot.Message) error {
+func showActions(bot *telebot.Bot, msg telebot.Message) error {
 	filename := msg.Text[strings.Index(msg.Text, " ")+1:]
 	currentPath := GetCurrentState(&msg.Sender).currentPath
 	file, err := os.Open(path.Join(currentPath, filename))
@@ -101,8 +108,7 @@ func ShowActions(bot *telebot.Bot, msg telebot.Message) error {
 	})
 }
 
-// ChangeDirectory updates current working directory for users and return file listing in new directory
-func ChangeDirectory(bot *telebot.Bot, msg telebot.Message) error {
+func cd(bot *telebot.Bot, msg telebot.Message) error {
 	state := GetCurrentState(&msg.Sender)
 
 	newPath := path.Join(state.currentPath, msg.Text[strings.Index(msg.Text, " ")+1:])
@@ -119,7 +125,7 @@ func ChangeDirectory(bot *telebot.Bot, msg telebot.Message) error {
 }
 
 // Download used for downloading files from fs
-func Download(bot *telebot.Bot, msg telebot.Message) error {
+func download(bot *telebot.Bot, msg telebot.Message) error {
 	filename := msg.Text[strings.Index(msg.Text, " ")+1:]
 	fileExt := filename[strings.LastIndex(filename, ".")+1:]
 
@@ -140,7 +146,7 @@ func Download(bot *telebot.Bot, msg telebot.Message) error {
 }
 
 // Remove file or folder from filesystem
-func Remove(bot *telebot.Bot, msg telebot.Message) error {
+func rm(bot *telebot.Bot, msg telebot.Message) error {
 	filename := msg.Text[strings.Index(msg.Text, " ")+1:]
 	fullpath := path.Join(GetCurrentState(&msg.Sender).currentPath, filename)
 

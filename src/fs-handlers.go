@@ -17,6 +17,27 @@ func init() {
 	Router.routes["/download"] = download
 	Router.routes["/rm"] = Confirm("delete")
 	Router.routes["/delete"] = rm
+	Router.routes["/rename"] = rename
+	Router.routes["text"] = handleText
+}
+
+func handleText(bot *telebot.Bot, msg telebot.Message) error {
+	state := GetCurrentState(&msg.Sender)
+
+	if state.selectedAction == UserActions.RENAME {
+		state.selectedAction = UserActions.NONE
+		dir, _ := path.Split(state.selectedFile)
+		newName := path.Join(dir, msg.Text)
+
+		err := os.Rename(state.selectedFile, newName)
+		if err != nil {
+			return bot.SendMessage(msg.Chat, "Failed to rename "+state.selectedFile, nil)
+		}
+
+		return bot.SendMessage(msg.Chat, "File "+state.selectedFile+" renamed successfully", nil)
+	}
+
+	return nil
 }
 
 func ls(bot *telebot.Bot, msg telebot.Message) error {
@@ -143,6 +164,14 @@ func download(bot *telebot.Bot, msg telebot.Message) error {
 		bot.SendVideo(msg.Sender, &telebot.Video{Audio: telebot.Audio{File: file}}, nil)
 	}
 	return bot.SendDocument(msg.Sender, &telebot.Document{File: file}, nil)
+}
+
+func rename(bot *telebot.Bot, msg telebot.Message) error {
+	state := GetCurrentState(&msg.Sender)
+	state.selectedAction = UserActions.RENAME
+	state.selectedFile = path.Join(state.currentPath, msg.Text[strings.Index(msg.Text, " ")+1:])
+
+	return bot.SendMessage(msg.Chat, "Please send a new name or /cancel to cancel renaming", nil)
 }
 
 // Remove file or folder from filesystem

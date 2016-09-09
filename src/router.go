@@ -28,7 +28,7 @@ func handler(bot *telebot.Bot, message telebot.Message) {
 		Router.routes["file"](bot, message)
 	}
 
-	if length := len(command); length > 0 && Router.routes["text"] != nil {
+	if length := len(command); length == 0 && Router.routes["text"] != nil {
 		Router.routes["text"](bot, message)
 	}
 

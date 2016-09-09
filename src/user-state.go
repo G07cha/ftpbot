@@ -11,6 +11,7 @@ type UserState struct {
 	user           *telebot.User
 	currentPath    string
 	selectedAction userAction
+	selectedFile   string
 }
 
 type userAction uint8

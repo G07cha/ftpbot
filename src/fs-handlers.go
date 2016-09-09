@@ -148,7 +148,7 @@ func cd(bot *telebot.Bot, msg telebot.Message) error {
 // Download used for downloading files from fs
 func download(bot *telebot.Bot, msg telebot.Message) error {
 	filename := msg.Text[strings.Index(msg.Text, " ")+1:]
-	fileExt := filename[strings.LastIndex(filename, ".")+1:]
+	fileExt := path.Ext(filename)
 
 	file, err := telebot.NewFile(path.Join(GetCurrentState(&msg.Sender).currentPath, filename))
 	if err != nil {

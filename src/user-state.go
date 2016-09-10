@@ -31,17 +31,17 @@ func init() {
 }
 
 // SelectFile appends provided filename to current directory
-func (u *UserState) SelectFile(filename string) error {
+func (u *UserState) SelectFile(filename string) (err error) {
 	fullpath := path.Join(u.currentPath, filename)
-	_, err := os.Stat(fullpath) // Check if item exists
+	_, err = os.Stat(fullpath) // Check if item exists
 	if err != nil {
-		return err
+		return
 	}
 
 	u.selectedAction = UserActions.SELECT
 	u.selectedFile = fullpath
 
-	return nil
+	return
 }
 
 // NewUser create new user with default parameters

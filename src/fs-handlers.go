@@ -20,6 +20,7 @@ func init() {
 	Router.routes["/rename"] = rename
 	Router.routes["/select"] = selectItem
 	Router.routes["/move"] = moveItem
+	Router.routes["/copy"] = copyItem
 	Router.routes["text"] = handleText
 }
 
@@ -164,15 +165,45 @@ func showActions(bot *telebot.Bot, msg telebot.Message) error {
 func moveItem(bot *telebot.Bot, msg telebot.Message) error {
 	state := GetCurrentState(&msg.Sender)
 	foldername := GetRemainingText(msg.Text)
-	_, filename := path.Split(state.selectedFile)
-	newPath := path.Join(state.currentPath, foldername, filename)
+	_, itemname := path.Split(state.selectedFile)
+	newPath := path.Join(state.currentPath, foldername, itemname)
 
 	err := os.Rename(state.selectedFile, newPath)
 	if err != nil {
 		return err
 	}
 
-	return bot.SendMessage(msg.Chat, "File "+filename+" moved successfully", nil)
+	state.selectedAction = UserActions.NONE
+	state.selectedFile = ""
+
+	return bot.SendMessage(msg.Chat, itemname+" moved successfully", nil)
+}
+
+func copyItem(bot *telebot.Bot, msg telebot.Message) error {
+	state := GetCurrentState(&msg.Sender)
+	foldername := GetRemainingText(msg.Text)
+	_, itemname := path.Split(state.selectedFile)
+	newPath := path.Join(state.currentPath, foldername, itemname)
+
+	info, err := os.Stat(path.Join(state.selectedFile))
+	if err != nil {
+		return err
+	}
+
+	if info.IsDir() == true {
+		err = CopyDir(state.selectedFile, newPath)
+	} else {
+		err = CopyFile(state.selectedFile, newPath)
+	}
+
+	if err != nil {
+		return err
+	}
+
+	state.selectedAction = UserActions.NONE
+	state.selectedFile = ""
+
+	return bot.SendMessage(msg.Chat, itemname+" copied successfully", nil)
 }
 
 func cd(bot *telebot.Bot, msg telebot.Message) error {

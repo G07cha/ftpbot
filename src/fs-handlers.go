@@ -59,7 +59,7 @@ func ls(bot *telebot.Bot, msg telebot.Message) error {
 }
 
 func showActions(bot *telebot.Bot, msg telebot.Message) error {
-	filename := msg.Text[strings.Index(msg.Text, " ")+1:]
+	filename := GetRemainingText(msg.Text)
 	currentPath := GetCurrentState(&msg.Sender).currentPath
 	file, err := os.Open(path.Join(currentPath, filename))
 	if err != nil {
@@ -132,7 +132,7 @@ func showActions(bot *telebot.Bot, msg telebot.Message) error {
 func cd(bot *telebot.Bot, msg telebot.Message) error {
 	state := GetCurrentState(&msg.Sender)
 
-	newPath := path.Join(state.currentPath, msg.Text[strings.Index(msg.Text, " ")+1:])
+	newPath := path.Join(state.currentPath, GetRemainingText(msg.Text))
 	state.currentPath = newPath
 
 	markup, err := lsToMarkup(newPath, 0)
@@ -147,7 +147,7 @@ func cd(bot *telebot.Bot, msg telebot.Message) error {
 
 // Download used for downloading files from fs
 func download(bot *telebot.Bot, msg telebot.Message) error {
-	filename := msg.Text[strings.Index(msg.Text, " ")+1:]
+	filename := GetRemainingText(msg.Text)
 	fileExt := path.Ext(filename)
 
 	file, err := telebot.NewFile(path.Join(GetCurrentState(&msg.Sender).currentPath, filename))
@@ -169,7 +169,7 @@ func download(bot *telebot.Bot, msg telebot.Message) error {
 func rename(bot *telebot.Bot, msg telebot.Message) error {
 	state := GetCurrentState(&msg.Sender)
 	state.selectedAction = UserActions.RENAME
-	state.selectedFile = path.Join(state.currentPath, msg.Text[strings.Index(msg.Text, " ")+1:])
+	state.selectedFile = path.Join(state.currentPath, GetRemainingText(msg.Text))
 
 	return bot.SendMessage(msg.Chat, "Please send me a new name", &telebot.SendOptions{
 		ReplyMarkup: telebot.ReplyMarkup{
@@ -187,7 +187,7 @@ func rename(bot *telebot.Bot, msg telebot.Message) error {
 
 // Remove file or folder from filesystem
 func rm(bot *telebot.Bot, msg telebot.Message) error {
-	filename := msg.Text[strings.Index(msg.Text, " ")+1:]
+	filename := GetRemainingText(msg.Text)
 	fullpath := path.Join(GetCurrentState(&msg.Sender).currentPath, filename)
 
 	err := os.RemoveAll(fullpath)

@@ -18,6 +18,8 @@ func init() {
 	Router.routes["/rm"] = Confirm("delete")
 	Router.routes["/delete"] = rm
 	Router.routes["/rename"] = rename
+	Router.routes["/select"] = selectItem
+	Router.routes["/move"] = moveItem
 	Router.routes["text"] = handleText
 }
 
@@ -58,10 +60,32 @@ func ls(bot *telebot.Bot, msg telebot.Message) error {
 	})
 }
 
+func selectItem(bot *telebot.Bot, msg telebot.Message) error {
+	filename := GetRemainingText(msg.Text)
+	err := GetCurrentState(&msg.Sender).SelectFile(filename)
+
+	if err != nil {
+		return err
+	}
+
+	return bot.SendMessage(msg.Chat, "File selected, navigate to desired folder and click Copy or Move button", &telebot.SendOptions{
+		ReplyMarkup: telebot.ReplyMarkup{
+			InlineKeyboard: [][]telebot.KeyboardButton{
+				[]telebot.KeyboardButton{
+					telebot.KeyboardButton{
+						Text: "Cancel",
+						Data: "/cancel",
+					},
+				},
+			},
+		},
+	})
+}
+
 func showActions(bot *telebot.Bot, msg telebot.Message) error {
 	filename := GetRemainingText(msg.Text)
-	currentPath := GetCurrentState(&msg.Sender).currentPath
-	file, err := os.Open(path.Join(currentPath, filename))
+	state := GetCurrentState(&msg.Sender)
+	file, err := os.Open(path.Join(state.currentPath, filename))
 	if err != nil {
 		return err
 	}
@@ -79,6 +103,18 @@ func showActions(bot *telebot.Bot, msg telebot.Message) error {
 			Data: "/cd " + fileInfo.Name(),
 		},
 	}
+
+	if state.selectedAction == UserActions.SELECT {
+		_, filename := path.Split(state.selectedFile)
+		folderActions = append(folderActions, telebot.KeyboardButton{
+			Text: "Copy " + filename,
+			Data: "/copy " + fileInfo.Name(),
+		}, telebot.KeyboardButton{
+			Text: "Move " + filename,
+			Data: "/move " + fileInfo.Name(),
+		})
+	}
+
 	fileActions := []telebot.KeyboardButton{
 		telebot.KeyboardButton{
 			Text: "Download",
@@ -97,12 +133,8 @@ func showActions(bot *telebot.Bot, msg telebot.Message) error {
 			},
 			[]telebot.KeyboardButton{
 				telebot.KeyboardButton{
-					Text: "Copy",
-					Data: "/cp " + fileInfo.Name(),
-				},
-				telebot.KeyboardButton{
-					Text: "Move",
-					Data: "/mv " + fileInfo.Name(),
+					Text: "Select",
+					Data: "/select " + fileInfo.Name(),
 				},
 			},
 			[]telebot.KeyboardButton{
@@ -127,6 +159,20 @@ func showActions(bot *telebot.Bot, msg telebot.Message) error {
 	return bot.SendMessage(msg.Chat, "Choose action for "+fileInfo.Name(), &telebot.SendOptions{
 		ReplyMarkup: *replyMarkup,
 	})
+}
+
+func moveItem(bot *telebot.Bot, msg telebot.Message) error {
+	state := GetCurrentState(&msg.Sender)
+	foldername := GetRemainingText(msg.Text)
+	_, filename := path.Split(state.selectedFile)
+	newPath := path.Join(state.currentPath, foldername, filename)
+
+	err := os.Rename(state.selectedFile, newPath)
+	if err != nil {
+		return err
+	}
+
+	return bot.SendMessage(msg.Chat, "File "+filename+" moved successfully", nil)
 }
 
 func cd(bot *telebot.Bot, msg telebot.Message) error {

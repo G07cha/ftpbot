@@ -1,7 +1,9 @@
 package main
 
 import (
+	"os"
 	"os/user"
+	"path"
 
 	"github.com/tucnak/telebot"
 )
@@ -18,14 +20,28 @@ type userAction uint8
 
 // UserActions used for storing available action and preventing random integer insertion
 var UserActions = struct {
-	NONE, COPY, MOVE, RENAME userAction
-}{0, 1, 2, 3}
+	NONE, SELECT, RENAME userAction
+}{0, 1, 2}
 
 // UsersList global list of users with their current states
 var UsersList []UserState
 
 func init() {
 	Router.routes["/cancel"] = ResetAction
+}
+
+// SelectFile appends provided filename to current directory
+func (u *UserState) SelectFile(filename string) error {
+	fullpath := path.Join(u.currentPath, filename)
+	_, err := os.Stat(fullpath) // Check if item exists
+	if err != nil {
+		return err
+	}
+
+	u.selectedAction = UserActions.SELECT
+	u.selectedFile = fullpath
+
+	return nil
 }
 
 // NewUser create new user with default parameters
@@ -49,6 +65,7 @@ func GetCurrentState(u *telebot.User) *UserState {
 		}
 	}
 
+	// Create new user if no user found
 	newState := NewUser(u)
 	UsersList = append(UsersList, newState)
 
@@ -59,6 +76,7 @@ func GetCurrentState(u *telebot.User) *UserState {
 func ResetAction(bot *telebot.Bot, msg telebot.Message) error {
 	state := GetCurrentState(&msg.Sender)
 
+	state.selectedFile = ""
 	state.selectedAction = UserActions.NONE
 
 	return bot.SendMessage(msg.Chat, "Got it, aborting!", nil)

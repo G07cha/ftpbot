@@ -171,7 +171,18 @@ func rename(bot *telebot.Bot, msg telebot.Message) error {
 	state.selectedAction = UserActions.RENAME
 	state.selectedFile = path.Join(state.currentPath, msg.Text[strings.Index(msg.Text, " ")+1:])
 
-	return bot.SendMessage(msg.Chat, "Please send a new name or /cancel to cancel renaming", nil)
+	return bot.SendMessage(msg.Chat, "Please send me a new name", &telebot.SendOptions{
+		ReplyMarkup: telebot.ReplyMarkup{
+			InlineKeyboard: [][]telebot.KeyboardButton{
+				[]telebot.KeyboardButton{
+					telebot.KeyboardButton{
+						Text: "Cancel",
+						Data: "/cancel",
+					},
+				},
+			},
+		},
+	})
 }
 
 // Remove file or folder from filesystem
